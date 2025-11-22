@@ -512,6 +512,85 @@ float HealthMax;
 
 ---
 
+## 11. Configuracion de Blueprint/Editor para Level 1
+
+### 11.1 GameMode Blueprint Configuration
+
+Para Level 1, crear o usar un GameMode BP con estas configuraciones:
+
+```
+BP_Level1_GameMode (basado en ARogueGameModeBase)
+├── bAutoRespawnPlayer = true
+├── SpawnTimerInterval = 0 (no spawnar bots)
+├── InitialSpawnCredit = 0 (no créditos para bots)
+├── MonsterTable = None
+└── SpawnBotQuery = None
+```
+
+### 11.2 World Settings del Mapa L_Level1_Plaza
+
+```
+World Settings:
+├── GameMode Override → BP_Level1_GameMode
+├── Default Pawn Class → BP_PlayerCharacter
+└── PlayerStart colocado en posición válida
+```
+
+### 11.3 Contenido Minimo del Mapa
+
+```
+L_Level1_Plaza:
+├── PlayerStart (1)
+├── BP_TargetDummy (2-3)
+├── BP_ExplosiveBarrel (1-2)
+├── Floor y paredes básicas
+└── Luz direccional + Sky
+```
+
+### 11.4 Player Blueprint Configuration
+
+El BP_PlayerCharacter debe tener:
+- `PlayerConfig` (URoguePlayerData) configurado con Input Actions
+- `DefaultActions` en ActionComp debe incluir `URogueAction_ProjectileAttack`
+
+---
+
+## 12. Notas de Compatibilidad UE 5.6 → 5.7
+
+### 12.1 Cambios Requeridos
+
+| Archivo | Cambio | Motivo |
+|---------|--------|--------|
+| `RogueActionComponent.h:79` | `BaseStruct = "/Script/ActionRoguelike.RogueAttributeSet"` | UE 5.7 requiere path largo |
+| `RogueProjectilesSubsystem.cpp` | Agregar `#include "NiagaraDataChannelPublic.h"` | API de Niagara Data Channels cambió |
+
+### 12.2 Tests Automatizados Creados
+
+```
+Source/ActionRoguelike/Tests/Level1_PlazaTests.cpp
+
+Tests incluidos:
+├── FLevel1_HealthInitTest - Health inicial = 100
+├── FLevel1_DamageTest - Daño reduce health
+├── FLevel1_HealthClampTest - Health clamp a 0
+├── FLevel1_HealthMaxClampTest - Health no excede max
+├── FLevel1_AttackDamageTest - AttackDamage existe
+└── FLevel1_ActionComponentSetupTest - Componente configurado
+```
+
+### 12.3 Ejecutar Tests
+
+```bash
+# Desde línea de comandos
+/opt/UnrealEngine-5.7/Engine/Binaries/Linux/UnrealEditor-Cmd \
+    ActionRoguelike.uproject \
+    -ExecCmds="Automation RunTests ActionRoguelike.Level1" \
+    -unattended -nopause -NullRHI -nosplash
+```
+
+---
+
 **Documento generado por**: Claude Code
 **Basado en**: Analisis de ActionRoguelike (Tom Looman)
-**Engine target**: UE 5.6
+**Engine target**: UE 5.6 / 5.7 compatible
+**Ultima actualizacion**: 2025-11-22

@@ -76,7 +76,7 @@ protected:
 	void K2_RemoveAttributeListener(FOnAttributeChangedDynamic Event);
 
 	/* Interchangeable set of attributes such as Health, BaseDamage, Strength, Stamina, MoveSpeed, etc. */
-	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category=Attributes, meta = (BaseStruct = "RogueAttributeSet", ExcludeBaseStruct))
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category=Attributes, meta = (BaseStruct = "/Script/ActionRoguelike.RogueAttributeSet", ExcludeBaseStruct))
 	FInstancedStruct AttributeSet;
 
 	/* Fetch from properties stored inside the AttributeSet for quick access */

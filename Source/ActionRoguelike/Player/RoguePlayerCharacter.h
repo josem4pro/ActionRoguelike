@@ -20,6 +20,7 @@ class UCameraComponent;
 class USpringArmComponent;
 class UAnimMontage;
 class URogueActionComponent;
+class ARogueProjectile;
 
 UCLASS(Abstract)
 class ACTIONROGUELIKE_API ARoguePlayerCharacter : public ACharacter, public IGenericTeamAgentInterface
@@ -76,6 +77,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UAudioComponent> AttackSoundsComp;
 
+	/* LEVEL 1: Projectile class for direct spawn (no Action System) */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<ARogueProjectile> ProjectileClass;
+
 	// Enhanced Input
 	// Three parameter options available (FInputActionInstance, FInputActionValue, or none)
 	void Move(const FInputActionInstance& Instance);
@@ -89,6 +94,9 @@ protected:
 	void StopActionByTag(const FInputActionValue& Instance, const FGameplayTag InActionTag);
 
 	void OnHealthAttributeChanged(float NewValue, const FAttributeModification& AttributeModification);
+
+	/* LEVEL 1: Direct projectile spawn without Action System */
+	void PrimaryAttack_Level1();
 
 	virtual void PostInitializeComponents() override;
 

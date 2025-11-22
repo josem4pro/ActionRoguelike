@@ -20,6 +20,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "UI/RogueWorldUserWidget.h"
+#include "Projectiles/RogueProjectile.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(RoguePlayerCharacter)
 
@@ -321,4 +322,46 @@ FGenericTeamId ARoguePlayerCharacter::GetGenericTeamId() const
 FVector ARoguePlayerCharacter::GetPawnViewLocation() const
 {
 	return CameraComp->GetComponentLocation();
+}
+
+
+void ARoguePlayerCharacter::PrimaryAttack_Level1()
+{
+	// LEVEL 1: Direct projectile spawn without Action System
+	// FUTURE: Replace with Action System (URogueAction_ProjectileAttack) in Level 3
+
+	if (!ProjectileClass)
+	{
+		UE_LOG(LogGame, Warning, TEXT("ARoguePlayerCharacter::PrimaryAttack_Level1 - ProjectileClass not configured"));
+		return;
+	}
+
+	// Get spawn location from Muzzle socket on character mesh
+	FVector SpawnLocation = GetMesh()->GetSocketLocation(TEXT("Muzzle_01"));
+
+	// Get direction from player control rotation (where camera is looking)
+	FRotator SpawnRotation = GetControlRotation();
+
+	// Set up spawn parameters
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = this;
+
+	// Spawn projectile directly in world
+	AActor* SpawnedProjectile = GetWorld()->SpawnActor<ARogueProjectile>(
+		ProjectileClass,
+		SpawnLocation,
+		SpawnRotation,
+		SpawnParams
+	);
+
+	if (!SpawnedProjectile)
+	{
+		UE_LOG(LogGame, Warning, TEXT("ARoguePlayerCharacter::PrimaryAttack_Level1 - Failed to spawn projectile"));
+		return;
+	}
+
+	// FUTURE: Apply attack damage from ActionComponent attributes
+	// FRogueAttribute* AttackDamageAttr = ActionComp->GetAttribute(SharedGameplayTags::Attribute_AttackDamage);
+	// if (AttackDamageAttr) { ProjectileDamage = AttackDamageAttr->GetValue(); }
 }

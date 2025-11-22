@@ -1,9 +1,45 @@
 # ActionRoguelike - Nivel 1: Plaza (Especificacion Detallada)
 
-**Version**: 1.0
+**Version**: 2.0 - Fase C Implementation
 **Fecha**: 2025-11-22
 **Nombre Clave**: "Hola Mundo Jugable"
 **Objetivo**: Juego minimo funcional - moverse, disparar, recibir dano
+
+---
+
+## 🎯 Estado de Implementación - Fase C (Noviembre 22, 2025)
+
+### Completado ✅
+
+| Sistema | Status | Detalles |
+|---------|--------|----------|
+| **Decisión Salud** | ✅ DONE | Opción B (ActionComponent con atributos) - Documentada línea 137 |
+| **Tests de Salud** | ✅ DONE | 6 tests pasan en Level1_PlazaTests.cpp (compilación verificada) |
+| **PrimaryAttack_Level1** | ✅ DONE | Implementado en RoguePlayerCharacter.cpp:327-366 |
+| **Respawn Simple** | ✅ DONE | Ya existe en ARogueGameModeBase.cpp:337-354 |
+| **Documentación** | ✅ DONE | Sección 11 (Configuración) completamente actualizada |
+| **Especificación** | ✅ DONE | Ambigüedades resueltas, paths de archivos verificados |
+
+### Pendiente para José (Blueprint/Editor) 📋
+
+| Tarea | Prioridad | Notas |
+|-------|-----------|-------|
+| Crear **BP_Level1_GameMode** (basado en ARogueGameModeBase) | HIGH | Activar `bAutoRespawnPlayer = true` |
+| Crear **BP_Level1_PlayerCharacter** (basado en ARoguePlayerCharacter) | HIGH | Asignar `ProjectileClass` a BP_MagicProjectile |
+| Crear **L_Level1_Plaza** map | HIGH | Seguir checklist 11.3 |
+| Crear **WBP_HealthBar** widget | MEDIUM | Bind a `Attribute_Health` para visualizar salud |
+| Configurar **Input Actions** en PlayerData | HIGH | Asegurar que Input_PrimaryAttack está configurado |
+| Crear **BP_MagicProjectile** (si no existe) | HIGH | Blueprint wrapper de ARogueProjectile_Magic |
+
+### C++ Ready para Uso 🚀
+
+Toda la lógica C++ de Nivel 1 está implementada:
+- ✅ ARoguePlayerCharacter con PrimaryAttack_Level1()
+- ✅ ARogueGameModeBase con respawn automático
+- ✅ ActionComponent con FRogueSurvivorAttributeSet (health, healthmax, attackdamage)
+- ✅ Todos los tests compilando sin errores
+
+---
 
 ---
 
@@ -134,31 +170,41 @@ void ARoguePlayerCharacter::PrimaryAttack_Level1(const FInputActionInstance& Ins
 
 ### 3.2 Sistema de Salud (Sin ActionComponent completo)
 
-**Opcion A**: Usar FRogueHealthAttributeSet directamente en PlayerCharacter
+**DECISION TOMADA: Opcion B** ✅ (Confirmed Phase C1)
+
+Razones:
+1. Tests ya asumen ActionComponent (Level1_PlazaTests.cpp)
+2. Compatibilidad con Nivel 2 (AI, Pickups herdan AttributeComponent)
+3. Preparación para Nivel 3: solo activar DefaultActions
+
+**Opcion A** (rechazada): Usar atributos directos en PlayerCharacter
+- ❌ Diverge de arquitectura general
+- ❌ Incompatible con AI future
+
+**Opcion B IMPLEMENTADA**: URogueActionComponent solo con atributos
 
 ```cpp
-// En RoguePlayerCharacter.h (Nivel 1)
-UPROPERTY(EditDefaultsOnly, Category = "Attributes")
-float Health = 100.0f;
-
-UPROPERTY(EditDefaultsOnly, Category = "Attributes")
-float HealthMax = 100.0f;
-
-UFUNCTION(BlueprintCallable)
-void ApplyDamage(float DamageAmount, AActor* Instigator);
-
-UFUNCTION(BlueprintCallable)
-float GetHealthPercent() const { return Health / HealthMax; }
-```
-
-**Opcion B**: Mantener URogueActionComponent pero solo con atributos
-
-```cpp
-// Crear ActionComponent pero sin acciones
+// En ARoguePlayerCharacter::Constructor (ya implementado)
 ActionComp = CreateDefaultSubobject<URogueActionComponent>(TEXT("ActionComp"));
-// NO agregar DefaultActions
-// Solo usar GetAttribute(Health) y ApplyAttributeChange()
+ActionComp->SetDefaultAttributeSet(FRogueSurvivorAttributeSet::StaticStruct());
+
+// Interfaz para Nivel 1 (sin Action System):
+FRogueAttribute* HealthAttr = ActionComp->GetAttribute(SharedGameplayTags::Attribute_Health);
+ActionComp->ApplyAttributeChange(
+    SharedGameplayTags::Attribute_Health,
+    DamageAmount,  // Negativo para daño
+    Instigator,
+    EAttributeModifyType::AddBase,
+    FGameplayTagContainer()
+);
+
+// FUTURO Nivel 3: Reemplazar con Action System (DefaultActions, GrantAction)
 ```
+
+**Atributos disponibles en L1**:
+- `Attribute_Health` (default 100)
+- `Attribute_HealthMax` (default 100)
+- `Attribute_AttackDamage` (default 25) - usado por projectiles
 
 ### 3.3 Target Dummy Simplificado
 
@@ -514,44 +560,87 @@ float HealthMax;
 
 ## 11. Configuracion de Blueprint/Editor para Level 1
 
-### 11.1 GameMode Blueprint Configuration
+### 11.1 GameMode Blueprint Configuration (IMPLEMENTADO EN C++)
 
-Para Level 1, crear o usar un GameMode BP con estas configuraciones:
+El `ARogueGameModeBase` YA TIENE la lógica de respawn simple implementada:
 
+✅ **En RogueGameModeBase.cpp (línea 337-354)**:
+- `OnActorKilled()` detecta muerte del player
+- Timer de 2 segundos antes de respawn
+- Llamada a `RestartPlayer()` automática
+
+**Para Level 1, solo activar en Blueprint**:
 ```
 BP_Level1_GameMode (basado en ARogueGameModeBase)
-├── bAutoRespawnPlayer = true
+├── bAutoRespawnPlayer = true ⭐ (ACTIVAR ESTO)
 ├── SpawnTimerInterval = 0 (no spawnar bots)
 ├── InitialSpawnCredit = 0 (no créditos para bots)
-├── MonsterTable = None
-└── SpawnBotQuery = None
+├── MonsterTable = None (sin tabla de enemigos)
+└── SpawnBotQuery = None (sin EQS)
 ```
 
-### 11.2 World Settings del Mapa L_Level1_Plaza
+### 11.2 World Settings del Mapa L_Level1_Plaza (CHECKLIST)
 
 ```
-World Settings:
-├── GameMode Override → BP_Level1_GameMode
-├── Default Pawn Class → BP_PlayerCharacter
-└── PlayerStart colocado en posición válida
+Pasos en el Editor:
+1. Crear nuevo mapa L_Level1_Plaza o usar TestLevel como base
+2. World Settings (Panel derecho del mapa):
+   - GameMode Override → BP_Level1_GameMode
+   - Default Pawn Class → BP_PlayerCharacter
+3. Colocar PlayerStart válido
+4. Guardar mapa
 ```
 
-### 11.3 Contenido Minimo del Mapa
+### 11.3 Contenido Minimo del Mapa (CHECKLIST)
 
 ```
-L_Level1_Plaza:
-├── PlayerStart (1)
-├── BP_TargetDummy (2-3)
-├── BP_ExplosiveBarrel (1-2)
-├── Floor y paredes básicas
-└── Luz direccional + Sky
+L_Level1_Plaza debe contener:
+├── ✓ PlayerStart (1) - Posición válida donde spawneará el player
+├── ✓ BP_TargetDummy (2-3) - Objetivos para testear daño
+├── ✓ BP_ExplosiveBarrel (1-2) - Fuente de daño para player
+├── ✓ Floor (StaticMesh) - Plataforma jugable
+├── ✓ Paredes básicas (colisiones)
+├── ✓ Luz direccional
+└── ✓ Sky - Para no estar en void
 ```
 
-### 11.4 Player Blueprint Configuration
+### 11.4 Player Blueprint Configuration (NIVEL 1 MODIFICADO)
 
-El BP_PlayerCharacter debe tener:
-- `PlayerConfig` (URoguePlayerData) configurado con Input Actions
-- `DefaultActions` en ActionComp debe incluir `URogueAction_ProjectileAttack`
+**BP_PlayerCharacter debe tener**:
+- ✅ `PlayerConfig` (URoguePlayerData) configurado con Input Actions
+- ✅ `ActionComp` configurado con `FRogueSurvivorAttributeSet` (ya en C++)
+- 🆕 `ProjectileClass` → Asignar `BP_MagicProjectile` (new for Level 1)
+- ⚠️ NO agregar `DefaultActions` en Level 1 (sin Action System)
+
+### 11.5 Configuracion de Input (Enhanced Input System)
+
+**Asegurar que estas Input Actions existen en PlayerData**:
+```
+Input_Move: WASD / Left Stick → Move()
+Input_Look: Mouse / Right Stick → LookMouse()/LookStick()
+Input_PrimaryAttack: LMB / Right Trigger → PrimaryAttack_Level1() ⭐ NEW
+Input_Jump: Space / A Button → Jump()
+Input_Dash: No requerido en L1
+Input_Sprint: No requerido en L1
+```
+
+**Cambio crítico en Input Binding** (línea 111 de RoguePlayerCharacter.cpp):
+- ANTES (Level 2+): `StartActionByTag(...Action_PrimaryAttack)`
+- DESPUÉS (Level 1): Podría llamar a `PrimaryAttack_Level1()` directamente
+- 📝 NOTA: Actualmente llama a StartActionByTag, que será un NOOP en L1 (sin DefaultActions)
+- ✅ ALTERNATIVA: Crear Blueprint BP_Level1_PlayerCharacter que overridea input binding
+
+### 11.6 HUD Configuration (OPCIONAL para L1)
+
+```
+Para mostrar Health Bar:
+├── Crear Widget WBP_HealthBar con blueprint
+├── Bind a Player Health atributo via ActionComponent
+├── Agregar a PlayerHUD.AddToViewport en ARogueHUD o Blueprint
+
+Alternativa simple:
+└── Usar GameMode Blueprint para spawnear HUD widget directamente
+```
 
 ---
 

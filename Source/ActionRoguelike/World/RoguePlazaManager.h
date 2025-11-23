@@ -1,6 +1,7 @@
 // RoguePlazaManager.h
 // Manager for applying plaza configuration and asset swapping
 // Part of SP-N1-V2-003 Fase 3R: Plaza Config & Asset Swap
+// Updated in SP-N1-V2-004 Fase 4R: Plaza Playground Config Runner
 
 #pragma once
 
@@ -78,6 +79,23 @@ public:
 	void SetPlazaConfigFromAsset(URoguePlazaConfigAsset* ConfigAsset);
 
 	/**
+	 * Load and set configuration from a JSON preset file
+	 * This is the main entry point for the Plaza Playground system
+	 * @param PresetPath Path to the JSON preset file
+	 * @return true if preset was loaded successfully
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Plaza|Config")
+	bool SetPlazaConfigFromPresetFile(const FString& PresetPath);
+
+	/**
+	 * Load preset from command line argument or environment variable
+	 * Checks: -PlazaPreset=/path or PLAZA_PRESET_PATH env var
+	 * @return true if a preset was found and loaded
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Plaza|Config")
+	bool LoadPresetFromCommandLine();
+
+	/**
 	 * Get current plaza configuration
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Plaza|Config")
@@ -145,6 +163,17 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Plaza|Utility")
 	TArray<FVector> CalculateSpawnPositions(int32 NumPositions) const;
+
+	// --- Setters for external configuration ---
+
+	/** Set whether to auto-apply on BeginPlay */
+	void SetAutoApplyOnBeginPlay(bool bEnable) { bAutoApplyOnBeginPlay = bEnable; }
+
+	/** Set the class to use for spawning target dummies */
+	void SetTargetDummyClass(TSubclassOf<ARogueTargetDummy> InClass) { TargetDummyClass = InClass; }
+
+	/** Set the class to use for spawning explosive barrels */
+	void SetExplosiveBarrelClass(TSubclassOf<ARogueExplosiveBarrel> InClass) { ExplosiveBarrelClass = InClass; }
 
 protected:
 	// --- Properties ---

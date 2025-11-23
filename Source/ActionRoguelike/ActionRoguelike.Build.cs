@@ -19,21 +19,23 @@ public class ActionRoguelike : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
-			"Core", 
-			"CoreUObject", 
-			"Engine", 
-			"InputCore", 
-			"AIModule", 
-			"GameplayTasks", 
-			"UMG", 
-			"GameplayTags", 
-			"OnlineSubsystem", 
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"InputCore",
+			"AIModule",
+			"GameplayTasks",
+			"UMG",
+			"GameplayTags",
+			"OnlineSubsystem",
 			"DeveloperSettings",
 			"SignificanceManager",
 			"EnhancedInput",
 			"Niagara",
 			"CoreOnline",
-			"NetCore"
+			"NetCore",
+			"Json",
+			"JsonUtilities"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]

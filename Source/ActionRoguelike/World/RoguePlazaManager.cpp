@@ -1,9 +1,11 @@
 // RoguePlazaManager.cpp
 // Implementation of plaza configuration manager
 // Part of SP-N1-V2-003 Fase 3R: Plaza Config & Asset Swap
+// Updated in SP-N1-V2-004 Fase 4R: Plaza Playground Config Runner
 
 #include "World/RoguePlazaManager.h"
 #include "World/RoguePlazaConfig.h"
+#include "World/RoguePlazaConfigLoader.h"
 #include "ActionSystem/RogueAttributeSet.h"
 #include "World/RogueTargetDummy.h"
 #include "World/RogueExplosiveBarrel.h"
@@ -29,10 +31,28 @@ void ARoguePlazaManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Load config from asset if specified
-	if (ConfigAsset)
+	// Priority order for configuration:
+	// 1. Command line / Environment variable preset
+	// 2. Data Asset
+	// 3. Inline config (defaults)
+
+	bool bLoadedExternalPreset = false;
+
+	// Try to load from command line or environment first (Plaza Playground mode)
+	if (LoadPresetFromCommandLine())
+	{
+		bLoadedExternalPreset = true;
+		UE_LOG(LogPlazaManager, Log, TEXT("Plaza Playground: Loaded preset from external source"));
+	}
+	// Fall back to data asset if specified
+	else if (ConfigAsset)
 	{
 		SetPlazaConfigFromAsset(ConfigAsset);
+		UE_LOG(LogPlazaManager, Log, TEXT("Using data asset configuration"));
+	}
+	else
+	{
+		UE_LOG(LogPlazaManager, Log, TEXT("Using inline/default configuration"));
 	}
 
 	if (bAutoApplyOnBeginPlay)
@@ -514,4 +534,32 @@ TArray<ARogueExplosiveBarrel*> ARoguePlazaManager::GetAllBarrels() const
 	}
 
 	return Result;
+}
+
+bool ARoguePlazaManager::SetPlazaConfigFromPresetFile(const FString& PresetPath)
+{
+	FPlazaConfig LoadedConfig;
+
+	if (FRoguePlazaConfigLoader::LoadPresetFromFile(PresetPath, LoadedConfig))
+	{
+		SetPlazaConfig(LoadedConfig);
+		UE_LOG(LogPlazaManager, Log, TEXT("Plaza Playground: Loaded config from preset file: %s"), *PresetPath);
+		return true;
+	}
+
+	UE_LOG(LogPlazaManager, Warning, TEXT("Plaza Playground: Failed to load preset from: %s"), *PresetPath);
+	return false;
+}
+
+bool ARoguePlazaManager::LoadPresetFromCommandLine()
+{
+	FString PresetPath = FRoguePlazaConfigLoader::ResolvePresetPathFromCmdLine();
+
+	if (PresetPath.IsEmpty())
+	{
+		// No preset specified, this is not an error
+		return false;
+	}
+
+	return SetPlazaConfigFromPresetFile(PresetPath);
 }

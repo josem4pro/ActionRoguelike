@@ -80,9 +80,11 @@ bool URogueActionComponent::K2_GetAttribute(FGameplayTag InAttributeTag, float& 
 
 bool URogueActionComponent::ApplyAttributeChange(const FAttributeModification& Modification)
 {
-	if (!GetOwner()->HasAuthority())
+	// Defensive check: In unit tests, components may be created without a valid Owner
+	AActor* Owner = GetOwner();
+	if (!Owner || !Owner->HasAuthority())
 	{
-		// Skip on clients.
+		// Skip on clients or when no owner (test environment)
 		return false;
 	}
 	

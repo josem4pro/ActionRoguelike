@@ -34,7 +34,7 @@ FString FRoguePlazaConfigLoader::ResolvePresetPathFromCmdLine()
 		UE_LOG(LogPlazaConfigLoader, Log, TEXT("Preset path from command line: %s"), *PresetPath);
 
 		// If relative path, make it relative to project dir
-		if (FPaths::IsRelativePath(PresetPath))
+		if (FPaths::IsRelative(PresetPath))
 		{
 			PresetPath = FPaths::Combine(FPaths::ProjectDir(), PresetPath);
 		}
@@ -48,7 +48,7 @@ FString FRoguePlazaConfigLoader::ResolvePresetPathFromCmdLine()
 	{
 		UE_LOG(LogPlazaConfigLoader, Log, TEXT("Preset path from environment: %s"), *EnvPresetPath);
 
-		if (FPaths::IsRelativePath(EnvPresetPath))
+		if (FPaths::IsRelative(EnvPresetPath))
 		{
 			EnvPresetPath = FPaths::Combine(FPaths::ProjectDir(), EnvPresetPath);
 		}
